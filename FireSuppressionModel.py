@@ -1,28 +1,51 @@
-# -*- coding: utf-8 -*-
 """
 Created on Tue Nov 24 13:56:43 2020
-
-@author: Kevin Hennessey
+@authors: Kevin Hennessey, Mitch Morganti, Avery Warner, Alex Warning
 """
 
 
 import cvxpy as cp
 
+## Output of Regression for Fire Spread
+FSP = 1
 
-## Problem 1
-t = cp.Variable((5,36), nonneg  = True) # vector variable
-e = cp.Variable((4,36), nonneg  = True)
-d = cp.Variable((2,36), nonneg  = True)
-h = cp.Variable((3,36), nonneg  = True)
+## Constant values for resource cost (to be changed)
+Cost_BR10 = 1
+Cost_BR20 = 1
+Cost_TR = 1
+Cost_DZ = 1
+Cost_HL = 1
 
-obj_func=12
+## Constant values for supression rates of resources (to be changed)
+Spr_BR10 = 1
+Spr_BR20 = 1
+Spr_TR = 1
+Spr_DZ = 1
+Spr_HL = 1
+
+
+## Decision variables: binary {0,1} for if resource i (row) was used during hour j (column)
+## Matrices specific to each resource type
+BR10 = cp.Variable((5,36), boolean  = True) 
+BR20 = cp.Variable((3,36), boolean = True)
+TR = cp.Variable((4,36), boolean = True)
+DZ = cp.Variable((2,36), boolean  = True)
+HL = cp.Variable((3,36), boolean = True)
+
+# Cost of resources used
+CRU = cp.Variable(1, nonneg = True)
+
+# cost here
+constraints.append()
+
+obj_func = CRU
 
 constraints = []
-## Budget constraints
-
-## Workforce constraints
+## People constraints
 
 ## Scheduling/Flow constraints
+
+## Fire Damage/Reduce Fire Spread Constraints
 
 
 
@@ -32,11 +55,13 @@ problem.solve(solver=cp.GUROBI,verbose = True)
 
 print("obj_func =")
 print(obj_func.value)
-print("Truck Matrix =")
-print(t.value)
-print("Engine Matrix =")
-print(e.value)
+print("Brigade of 10 Matrix =")
+print(BR10.value)
+print("Brigade of 20 Matrix =")
+print(BR20.value)
+print("Truck Scheduling Matrix = ")
+print(TR.value)
 print("Dozer Matrix =")
-print(d.value)
+print(DZ.value)
 print("Helicopter Matrix =")
-print(h.value)
+print(HL.value)
