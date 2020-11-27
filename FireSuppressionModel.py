@@ -32,20 +32,22 @@ for x in range(6):
 
 
 ### ESTIMATES FOR COST, SUPPRESSION GIVEN BY DATA
+
+### NEED TO FIND BALANCE BY SUPPRESSION per COST
 # Constant values for resource cost (may need scaling)
-Cost_BR10 = 230
-Cost_BR20 = 460
+Cost_BR10 = 230 # needs to cost less (look at studies)
+Cost_BR20 = 460 # needs to cost less
 Cost_TR = 240
-Cost_DZ = 188
+Cost_DZ = 188 # needs to cost more
 # may need to change heli cost
 Cost_HL = 1051
 
 # Constant values for supression rates of resources (may need scaling)
 Spr_BR10 = 3
-Spr_BR20 = 5
+Spr_BR20 = 6
 Spr_TR = 20
 # may need to change dozer 
-Spr_DZ = 25
+Spr_DZ = 25 # may need to modify (to 10-15)
 Spr_HL = 30
 
 
@@ -81,13 +83,65 @@ obj_func = CRU
 constraints = []
 
 # People constraints (only adjustments here could be people requirements/per resource)
-for j in range(36):
+for j in range(M):
 	constraints.append(10 * (BR10[0,j] + BR10[1,j] + BR10[2,j] + BR10[3,j] + BR10[4,j]) 
 	 + 20 * (BR20[0,j] + BR20[1,j] + BR20[2,j]) + 5 * (TR[0,j] + TR[1,j] + TR[2,j] + TR[3,j])
 	 + 1 * (DZ[0,j] +  DZ[1,j]) + 2 * (HL[0,j] + HL[1,j] + HL[2,j]) <= 80)
 
 
 ## Scheduling/Flow constraints
+## Brigade 10 can only be utilized 3 out of every 4 hours
+for i in range(5):
+    for j in range(33):
+        # For BR20 i on hour j, enfore constraint that for 3 hours a brigade can only be deployed for 3 hours.
+        constraints.append(BR10[i, j] + BR10[i, j+1] + BR10[i, j+2] + BR10[i, j+3]  <= 3)
+
+# Constraint for Brigade 20 Availability/Scheduling
+# Loop through each BR20
+for i in range(3):
+    # Loop through hours
+    for j in range(31):
+        # For BR20 i on hour j, enfore constraint that for 6 hours a brigade can only be deployed for 4 hours. 
+        constraints.append(BR20[i, j] + BR20[i, j+1] + BR20[i, j+2] + BR20[i, j+3] + BR20[i, j+4] + BR20[i, j+5]  <= 4)
+
+for i in range(4):
+    # Loop through hours
+    for j in range(34):
+        # For TR i on hour j, enfore constraint that for 3 hours a Truck can only be deployed for 2 hours. 
+        constraints.append(TR[i, j] + TR[i, j+1] + TR[i, j+2] <= 2)
+
+for i in range(2):
+    # Loop through hours
+    for j in range(31):
+        # For TR i on hour j, enfore constraint that for 6 hours a brigade can only be deployed for 4 hours. 
+        constraints.append(DZ[i, j] + DZ[i, j+1] + DZ[i, j+2] + DZ[i, j+3]+ DZ[i, j+4]+ DZ[i, j+5]<= 4)
+
+for i in range(3):
+    # Loop through hours
+    for j in range(34):
+        # For HL i on hour j, enfore constraint that for 3 hours a helicopter can only be deployed for 1 hour. 
+        constraints.append(HL[i, j] + HL[i, j+1] + HL[i, j+2]<= 1)
+
+#Constraints for the amount of equipment released based on Equipment Type
+
+# Only 4 out of 5 BR10 can be deployed within an hour period
+for j in range(36):
+    constraints.append(BR10[0,j] + BR10[1,j]+ BR10[2,j]+ BR10[3,j]+ BR10[4,j] <= 4)
+
+# Only 2 out of 3 BR20 can be deployed within an hour period
+for j in range(36):
+    constraints.append(BR20[0,j] + BR20[1,j]+ BR20[2,j] <= 2)
+
+# Only 2 out of 4 TR can be deployed within an hour period
+for j in range(36):
+    constraints.append(TR[0,j] + TR[1,j]+ TR[2,j] + TR[3,j] <= 2)
+
+## No Constraints on Dozer. Both Dozers may be used simultaneously.
+
+# only 2 out of 3 Helicopters can be relaesed in one hour period
+for j in range(36):
+    constraints.append(HL[0,j] + HL[1,j]+ HL[2,j] <= 2)
+
 
 # Fire Spread constraint: fire spread must be reduced to 0 in K hours
 # Holds constraints and adds together in loop
