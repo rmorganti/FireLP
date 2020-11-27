@@ -84,6 +84,59 @@ for j in range(6,36):
 	 + Spr_DZ * (DZ[0,j] +  DZ[1,j]) + Spr_HL * (HL[0,j] + HL[1,j] + HL[2,j])) <= 0)
 
 
+# Schdeuling constraints for each resource, based on consecutive available hours for each equipment
+## Brigade 10 can only be utilized 3 out of every 4 hours
+for i in range(5):
+    for j in range(33):
+        # For BR20 i on hour j, enfore constraint that for 3 hours a brigade can only be deployed for 3 hours.
+        constraints.append(BR10[i, j] + BR10[i, j+1] + BR10[i, j+2] + BR10[i, j+3]  <= 3)
+        
+# Constraint for Brigade 20 Availability/Scheduling
+# Loop through each BR20
+for i in range(3):
+    # Loop through hours
+    for j in range(31):
+        # For BR20 i on hour j, enfore constraint that for 6 hours a brigade can only be deployed for 4 hours. 
+        constraints.append(BR20[i, j] + BR20[i, j+1] + BR20[i, j+2] + BR20[i, j+3] + BR20[i, j+4] + BR20[i, j+5]  <= 4)
+        
+for i in range(4):
+    # Loop through hours
+    for j in range(34):
+        # For TR i on hour j, enfore constraint that for 3 hours a Truck can only be deployed for 2 hours. 
+        constraints.append(TR[i, j] + TR[i, j+1] + TR[i, j+2] <= 2)
+        
+for i in range(2):
+    # Loop through hours
+    for j in range(31):
+        # For TR i on hour j, enfore constraint that for 6 hours a brigade can only be deployed for 4 hours. 
+        constraints.append(DZ[i, j] + DZ[i, j+1] + DZ[i, j+2] + DZ[i, j+3]+ DZ[i, j+4]+ DZ[i, j+5]<= 4)
+
+for i in range(3):
+    # Loop through hours
+    for j in range(34):
+        # For HL i on hour j, enfore constraint that for 3 hours a helicopter can only be deployed for 1 hour. 
+        constraints.append(HL[i, j] + HL[i, j+1] + HL[i, j+2]<= 1)
+        
+#Constraints for the amount fo equipment released based on Equipment Type
+
+# Only 4 out of 5 BR10 can be deployed within an hour period
+for j in range(36):
+    constraints.append(BR10[0,j] + BR10[1,j]+ BR10[2,j]+ BR10[3,j]+ BR10[4,j] <= 4)
+
+# Only 2 out of 3 BR20 can be deployed within an hour period
+for j in range(36):
+    constraints.append(BR20[0,j] + BR20[1,j]+ BR20[2,j] <= 2)
+
+# Only 2 out of 4 TR can be deployed within an hour period
+for j in range(36):
+    constraints.append(TR[0,j] + TR[1,j]+ TR[2,j] + TR[3,j] <= 2)
+
+## No Constraints on Dozer. Both Dozers may be used simultaneously.
+
+# only 2 out of 3 Helicopters can be relaesed in one hour period
+for j in range(36):
+    constraints.append(HL[0,j] + HL[1,j]+ HL[2,j] <= 2)
+
 # Solve the problem of minimizing cost of deployed resources, s.t constraints above
 problem = cp.Problem(cp.Minimize(obj_func), constraints)
 
