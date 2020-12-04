@@ -12,7 +12,7 @@ import cvxpy as cp
 K = 6
 # Max time to extinguish: fire extinguished in M hours
 M = 24
-# Output of Regression for Fire Spread
+# Output of Regression for Fire Spread (Chaparral input currently)
 FSP = 577
 
 
@@ -32,9 +32,9 @@ for x in range(K):
 
 ### ESTIMATES FOR COST, SUPPRESSION GIVEN BY DATA
 
-# Constant values for resource cost 
+# Constant values for resource cost
 Cost_BR10 = 117
-Cost_BR20 = 195 
+Cost_BR20 = 195
 Cost_TR = 340
 Cost_DZ = 390 
 Cost_HL = 1051
@@ -63,9 +63,10 @@ CRU = 0
 holdCost = 0
 
 # Complete summation for cost function; this loop truly represents the objective function
-# Recall python loop index is number-1 (here is 0 to 35)
+# Recall python loop index is number-1 (here is 0 to M-1)
 for j in range(M):
-	 holdCost = Cost_BR10 * (BR10[0,j] + BR10[1,j] + BR10[2,j] + BR10[3,j] + BR10[4,j])  + Cost_BR20 * (BR20[0,j] + BR20[1,j] + BR20[2,j]) + Cost_TR * (TR[0,j] + TR[1,j] + TR[2,j] + TR[3,j])+ Cost_DZ * (DZ[0,j] +  DZ[1,j]) + Cost_HL * (HL[0,j] + HL[1,j] + HL[2,j])
+	 holdCost = Cost_BR10 * (BR10[0,j] + BR10[1,j] + BR10[2,j] + BR10[3,j] + BR10[4,j])  + Cost_BR20 * (BR20[0,j] + BR20[1,j]
+      + BR20[2,j]) + Cost_TR * (TR[0,j] + TR[1,j] + TR[2,j] + TR[3,j])+ Cost_DZ * (DZ[0,j] +  DZ[1,j]) + Cost_HL * (HL[0,j] + HL[1,j] + HL[2,j])
 	 CRU = CRU + holdCost
 
 
@@ -77,21 +78,21 @@ obj_func = CRU
 # Define constraints
 constraints = []
 
-# People constraints (only adjustments here could be people requirements/per resource)
+# People constraints 
 for j in range(M):
 	constraints.append(10 * (BR10[0,j] + BR10[1,j] + BR10[2,j] + BR10[3,j] + BR10[4,j]) 
 	 + 20 * (BR20[0,j] + BR20[1,j] + BR20[2,j]) + 5 * (TR[0,j] + TR[1,j] + TR[2,j] + TR[3,j])
 	 + 1 * (DZ[0,j] +  DZ[1,j]) + 2 * (HL[0,j] + HL[1,j] + HL[2,j]) <= 80)
 
 
-## Scheduling/Flow constraints
-## Brigade 10 can only be utilized 3 out of every 4 hours
+## Break constraints
+## Brigade 10 breaks
 for i in range(5):
     for j in range(M - 3):
         # For BR10 i on hour j, enfore constraint that for 4 hours a brigade can only be deployed for 3 hours.
         constraints.append(BR10[i, j] + BR10[i, j+1] + BR10[i, j+2] + BR10[i, j+3]  <= 3)
 
-# Constraint for Brigade 20 Availability/Scheduling
+# Constraint for Brigade 20 Breaks
 # Loop through each BR20
 for i in range(3):
     # Loop through hours
@@ -99,25 +100,28 @@ for i in range(3):
         # For BR20 i on hour j, enfore constraint that for 6 hours a brigade can only be deployed for 4 hours. 
         constraints.append(BR20[i, j] + BR20[i, j+1] + BR20[i, j+2] <= 2)
 
+# Truck Breaks
 for i in range(4):
     # Loop through hours
     for j in range(M - 2):
         # For TR i on hour j, enfore constraint that for 3 hours a Truck can only be deployed for 2 hours. 
         constraints.append(TR[i, j] + TR[i, j+1] + TR[i, j+2] <= 2)
 
+# Dozer Breaks
 for i in range(2):
     # Loop through hours
     for j in range(M - 2):
         # For DZ i on hour j, enfore constraint that for 3 hours a brigade can only be deployed for 2 hours. 
         constraints.append(DZ[i, j] + DZ[i, j+1] + DZ[i, j+2] <= 2)
 
+# Helicopter Breaks
 for i in range(3):
     # Loop through hours
     for j in range(M - 2):
         # For HL i on hour j, enfore constraint that for 3 hours a helicopter can only be deployed for 1 hour. 
         constraints.append(HL[i, j] + HL[i, j+1] + HL[i, j+2]<= 1)
 
-#Constraints for the amount fo equipment released based on Equipment Type
+# Constraints for the amount of equipment released based on Equipment Type
 
 # Only 4 out of 5 BR10 can be deployed within an hour period
 for j in range(M):
@@ -170,7 +174,7 @@ problem = cp.Problem(cp.Minimize(obj_func), constraints)
 problem.solve(solver=cp.GUROBI,verbose = True)
 
 
-# Solve 
+# Print out objective value, value of each scheduling matrix 
 print("obj_func =")
 print(obj_func.value)
 print("Brigade of 10 Matrix =")
